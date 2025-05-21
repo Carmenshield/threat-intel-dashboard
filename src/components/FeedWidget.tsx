@@ -5,7 +5,7 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, AlertCircle } from "lucide-react";
 
 export const FeedWidget: React.FC<FeedWidgetProps> = ({
   feedUrl,
@@ -53,7 +53,12 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
         {feed.loading ? (
           <SkeletonNews count={limit} />
         ) : feed.error ? (
-          <div className="text-red-400">Failed to load feed</div>
+          <div className="text-red-400 flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            Failed to load feed
+          </div>
+        ) : feed.items.length === 0 ? (
+          <div className="text-gray-500">No items available</div>
         ) : (
           <div className="space-y-3">
             {feed.items.slice(0, limit).map((item, idx) => (

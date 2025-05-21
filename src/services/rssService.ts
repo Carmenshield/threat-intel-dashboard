@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { RssFeed, RssItem } from "@/types";
+import { toast } from "@/components/ui/sonner";
 
 // A proxy API service to avoid CORS issues with RSS feeds
 const CORS_PROXY = "https://api.allorigins.win/get?url=";
@@ -8,16 +9,31 @@ const CORS_PROXY = "https://api.allorigins.win/get?url=";
 // Fetch and parse RSS feed
 export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
   try {
+    console.log(`Fetching RSS feed: ${feedUrl}`);
     const encodedUrl = encodeURIComponent(feedUrl);
-    const response = await fetch(`${CORS_PROXY}${encodedUrl}`);
+    const response = await fetch(`${CORS_PROXY}${encodedUrl}`, {
+      headers: {
+        'Accept': '*/*',
+      },
+      cache: 'no-cache',
+    });
     
     if (!response.ok) {
-      throw new Error("Failed to fetch RSS feed");
+      throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
+    
+    if (!data.contents) {
+      throw new Error("Invalid response from proxy service");
+    }
+    
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+    
+    if (xmlDoc.querySelector("parsererror")) {
+      throw new Error("Failed to parse XML content");
+    }
     
     // Parse the XML content
     const items = Array.from(xmlDoc.querySelectorAll("item")).map(item => {
@@ -47,11 +63,17 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
 
 // React Query hook to fetch RSS feeds
 export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed => {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["rssFeed", feedUrl],
     queryFn: () => fetchRssFeed(feedUrl),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    retry: 3,
+    retryDelay: attempt => Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000),
+    onError: (err) => {
+      toast.error(`Failed to load ${title} feed`, {
+        description: "Please try again later",
+      });
+    },
   });
 
   return {
