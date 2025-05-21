@@ -89,5 +89,10 @@ export const defaultFeeds = [
     title: "Dark Reading",
     url: "https://www.darkreading.com/rss.xml",
     description: "Connecting the cybersecurity community"
+  },
+  {
+    title: "Qualys Threat Protection",
+    url: "https://threatprotect.qualys.com/feed/",
+    description: "Threat intelligence from Qualys"
   }
 ];
