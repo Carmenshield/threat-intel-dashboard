@@ -1,0 +1,93 @@
+
+import { useQuery } from "@tanstack/react-query";
+import { RssFeed, RssItem } from "@/types";
+
+// A proxy API service to avoid CORS issues with RSS feeds
+const CORS_PROXY = "https://api.allorigins.win/get?url=";
+
+// Fetch and parse RSS feed
+export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
+  try {
+    const encodedUrl = encodeURIComponent(feedUrl);
+    const response = await fetch(`${CORS_PROXY}${encodedUrl}`);
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch RSS feed");
+    }
+    
+    const data = await response.json();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+    
+    // Parse the XML content
+    const items = Array.from(xmlDoc.querySelectorAll("item")).map(item => {
+      const title = item.querySelector("title")?.textContent || "";
+      const link = item.querySelector("link")?.textContent || "";
+      const pubDate = item.querySelector("pubDate")?.textContent || "";
+      const creator = item.querySelector("dc\\:creator")?.textContent || 
+                     item.querySelector("creator")?.textContent || "";
+      const contentSnippet = item.querySelector("description")?.textContent || "";
+      
+      return {
+        title,
+        link,
+        pubDate,
+        creator,
+        contentSnippet,
+        source: new URL(feedUrl).hostname
+      };
+    });
+    
+    return items;
+  } catch (error) {
+    console.error("Error fetching RSS feed:", error);
+    throw error;
+  }
+};
+
+// React Query hook to fetch RSS feeds
+export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["rssFeed", feedUrl],
+    queryFn: () => fetchRssFeed(feedUrl),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+
+  return {
+    items: data || [],
+    feedUrl,
+    title,
+    description,
+    loading: isLoading,
+    error: isError,
+  };
+};
+
+export const defaultFeeds = [
+  {
+    title: "Bleeping Computer",
+    url: "https://www.bleepingcomputer.com/feed/",
+    description: "Latest cybersecurity news and articles"
+  },
+  {
+    title: "Krebs on Security",
+    url: "https://krebsonsecurity.com/feed/",
+    description: "In-depth security news and investigation"
+  },
+  {
+    title: "The Hacker News",
+    url: "https://feeds.feedburner.com/TheHackersNews",
+    description: "Cybersecurity news and analysis"
+  },
+  {
+    title: "Threatpost",
+    url: "https://threatpost.com/feed/",
+    description: "Breaking news for IT security professionals"
+  },
+  {
+    title: "Dark Reading",
+    url: "https://www.darkreading.com/rss.xml",
+    description: "Connecting the cybersecurity community"
+  }
+];
