@@ -4,6 +4,7 @@ import { Responsive, WidthProvider } from "react-grid-layout";
 import FeedWidget from "@/components/FeedWidget";
 import { defaultFeeds } from "@/services/rssService";
 import "react-grid-layout/css/styles.css";
+import { toast } from "@/components/ui/sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -11,7 +12,16 @@ interface DashboardProps {
   className?: string;
 }
 
+interface FeedConfig {
+  title: string;
+  url: string;
+  description?: string;
+}
+
 export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
+  // Initialize feeds with the default feeds
+  const [feeds, setFeeds] = useState<FeedConfig[]>(defaultFeeds);
+  
   // Define the initial layout for different screen sizes
   const [layouts] = useState({
     lg: [
@@ -40,6 +50,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
     ],
   });
 
+  // Handle feed configuration changes
+  const handleFeedConfigChange = (index: number, config: { feedUrl: string; title: string; description?: string }) => {
+    const updatedFeeds = [...feeds];
+    updatedFeeds[index] = {
+      title: config.title,
+      url: config.feedUrl,
+      description: config.description,
+    };
+    setFeeds(updatedFeeds);
+    toast.success(`Updated ${config.title} feed configuration`);
+  };
+
   return (
     <div className={className}>
       <ResponsiveGridLayout
@@ -48,18 +70,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 9, sm: 12, xs: 6, xxs: 3 }}
         rowHeight={250}
-        isDraggable
-        isResizable
+        isDraggable={true}
+        isResizable={true}
         margin={[16, 16]}
         containerPadding={[0, 0]}
+        draggableHandle=".cursor-move"
       >
-        {defaultFeeds.map((feed, index) => (
+        {feeds.map((feed, index) => (
           <div key={`feed-${index}`} className="grid-item">
             <FeedWidget 
               feedUrl={feed.url} 
               title={feed.title} 
               description={feed.description} 
-              limit={10} 
+              limit={10}
+              onConfigChange={(config) => handleFeedConfigChange(index, config)} 
             />
           </div>
         ))}

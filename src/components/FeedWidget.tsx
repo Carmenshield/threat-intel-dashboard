@@ -5,13 +5,16 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink, AlertCircle } from "lucide-react";
+import { ExternalLink, AlertCircle, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import FeedConfigDialog from "@/components/FeedConfigDialog";
 
 export const FeedWidget: React.FC<FeedWidgetProps> = ({
   feedUrl,
   title,
   description,
   limit = 10,
+  onConfigChange,
 }) => {
   const feed = useFeed(feedUrl, title, description);
   
@@ -41,12 +44,28 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
     <Card className="h-full overflow-hidden flex flex-col bg-cyber-card border-cyber-accent/30">
       <CardHeader className="pb-2 bg-cyber-card">
         <CardTitle className="text-lg text-cyber-highlight flex justify-between items-center">
-          {title}
-          {description && (
-            <span className="text-xs text-gray-400 truncate ml-2 flex-1">
-              {description}
-            </span>
-          )}
+          <div className="flex-1 flex items-center">
+            {title}
+            {description && (
+              <span className="text-xs text-gray-400 truncate ml-2 flex-1">
+                {description}
+              </span>
+            )}
+          </div>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors cursor-move" title="Configure feed">
+                <Settings className="w-4 h-4 text-gray-400" />
+              </button>
+            </DialogTrigger>
+            <FeedConfigDialog 
+              feedUrl={feedUrl} 
+              title={title} 
+              description={description}
+              onSave={onConfigChange}
+            />
+          </Dialog>
         </CardTitle>
       </CardHeader>
       <CardContent className="overflow-y-auto flex-1 px-3 py-2">

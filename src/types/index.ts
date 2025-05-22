@@ -1,4 +1,3 @@
-
 export interface RssItem {
   title: string;
   link: string;
@@ -27,6 +26,7 @@ export interface FeedWidgetProps {
   title: string;
   description?: string;
   limit?: number;
+  onConfigChange?: (config: { feedUrl: string; title: string; description?: string }) => void;
 }
 
 export interface SearchResult {
