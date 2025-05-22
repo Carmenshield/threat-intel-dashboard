@@ -5,7 +5,7 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink, AlertCircle, Settings } from "lucide-react";
+import { ExternalLink, AlertCircle, Settings, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import FeedConfigDialog from "@/components/FeedConfigDialog";
 
@@ -15,6 +15,7 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
   description,
   limit = 10,
   onConfigChange,
+  onDelete,
 }) => {
   const feed = useFeed(feedUrl, title, description);
   
@@ -53,19 +54,31 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
             )}
           </div>
           
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="ml-2 p-1 rounded-md hover:bg-gray-700 transition-colors cursor-move" title="Configure feed">
-                <Settings className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-1">
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="p-1 rounded-md hover:bg-gray-700 transition-colors" title="Configure feed">
+                  <Settings className="w-4 h-4 text-gray-400" />
+                </button>
+              </DialogTrigger>
+              <FeedConfigDialog 
+                feedUrl={feedUrl} 
+                title={title} 
+                description={description}
+                onSave={onConfigChange}
+              />
+            </Dialog>
+            
+            {onDelete && (
+              <button 
+                onClick={onDelete}
+                className="p-1 rounded-md hover:bg-gray-700 hover:text-red-400 transition-colors"
+                title="Delete feed"
+              >
+                <Trash className="w-4 h-4 text-gray-400" />
               </button>
-            </DialogTrigger>
-            <FeedConfigDialog 
-              feedUrl={feedUrl} 
-              title={title} 
-              description={description}
-              onSave={onConfigChange}
-            />
-          </Dialog>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="overflow-y-auto flex-1 px-3 py-2">

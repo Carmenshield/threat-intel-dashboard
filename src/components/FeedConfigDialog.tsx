@@ -22,6 +22,8 @@ const FeedConfigDialog: React.FC<FeedConfigProps> = ({
   const [newFeedUrl, setNewFeedUrl] = useState(feedUrl);
   const [newTitle, setNewTitle] = useState(title);
   const [newDescription, setNewDescription] = useState(description || "");
+  
+  const isNewFeed = feedUrl === "" && title === "";
 
   const handleSave = () => {
     if (!newFeedUrl.trim() || !newTitle.trim()) {
@@ -40,13 +42,15 @@ const FeedConfigDialog: React.FC<FeedConfigProps> = ({
       description: newDescription.trim() || undefined,
     });
 
-    toast.success("Feed configuration updated");
+    toast.success(isNewFeed ? "New feed added" : "Feed configuration updated");
   };
 
   return (
     <DialogContent className="sm:max-w-md bg-cyber-card text-white border-cyber-accent/30">
       <DialogHeader>
-        <DialogTitle className="text-cyber-highlight">Configure RSS Feed</DialogTitle>
+        <DialogTitle className="text-cyber-highlight">
+          {isNewFeed ? "Add New RSS Feed" : "Configure RSS Feed"}
+        </DialogTitle>
       </DialogHeader>
       
       <div className="space-y-4 py-4">
@@ -86,7 +90,7 @@ const FeedConfigDialog: React.FC<FeedConfigProps> = ({
       
       <DialogFooter>
         <Button type="button" onClick={handleSave} className="bg-cyber-highlight hover:bg-cyber-highlight/90">
-          Save Changes
+          {isNewFeed ? "Add Feed" : "Save Changes"}
         </Button>
       </DialogFooter>
     </DialogContent>
