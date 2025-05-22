@@ -69,8 +69,8 @@ export const useFeed = (feedUrl: string, title: string, description?: string): R
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     retryDelay: attempt => Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000),
-    onSettled: (data, error) => {
-      if (error) {
+    meta: {
+      onError: () => {
         toast.error(`Failed to load ${title} feed`, {
           description: "Please try again later",
         });
