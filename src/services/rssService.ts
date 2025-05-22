@@ -4,7 +4,7 @@ import { RssFeed, RssItem } from "@/types";
 import { toast } from "@/components/ui/sonner";
 
 // A proxy API service to avoid CORS issues with RSS feeds
-const CORS_PROXY = "https://api.allorigins.win/get?url=";
+const CORS_PROXY = "https://corsproxy.io/?url=";
 
 // Fetch and parse RSS feed
 export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
