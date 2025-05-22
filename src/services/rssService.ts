@@ -105,9 +105,9 @@ export const defaultFeeds = [
     description: "Cybersecurity news and analysis"
   },
   {
-    title: "Threatpost",
-    url: "https://threatpost.com/feed/",
-    description: "Breaking news for IT security professionals"
+    title: "CISA Advisories",
+    url: "https://www.cisa.gov/uscert/ncas/current-activity.xml",
+    description: "Current activity from US-CERT/CISA"
   },
   {
     title: "Dark Reading",
