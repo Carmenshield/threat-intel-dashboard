@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { RssFeed, RssItem } from "@/types";
 import { toast } from "@/components/ui/sonner";
@@ -96,7 +95,7 @@ export const defaultFeeds = [
   },
   {
     title: "Krebs on Security",
-    url: "https://krebsonsecurity.com/feed/",
+    url: "https://feeds.feedburner.com/krebsonsecurity/2p0rdzgpxcm",
     description: "In-depth security news and investigation"
   },
   {
