@@ -91,7 +91,7 @@ export const useFeed = (feedUrl: string, title: string, description?: string): R
 export const defaultFeeds = [
   {
     title: "Bleeping Computer",
-    url: "https://www.bleepingcomputer.com/feed/",
+    url: "https://feeds.feedburner.com/bleepingcomputer/dokidoneebm",
     description: "Latest cybersecurity news and articles"
   },
   {
