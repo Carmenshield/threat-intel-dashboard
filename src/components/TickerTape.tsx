@@ -1,5 +1,6 @@
 import React from "react";
 import { useFeed, defaultFeeds } from "@/services/rssService";
+import { isAfter, subHours } from "date-fns";
 
 const TickerTape = () => {
   // Fetch data from all feeds
@@ -7,14 +8,30 @@ const TickerTape = () => {
     useFeed(feed.url, feed.title, feed.description)
   );
 
-  // Get all stories from all feeds
-  const tickerItems = feedData.flatMap(feed => 
-    feed.items.map(item => ({
-      title: item.title,
-      source: feed.title,
-      link: item.link
-    }))
-  );
+  // Get all stories from all feeds published in the last 24 hours
+  const twentyFourHoursAgo = subHours(new Date(), 24);
+  
+  const tickerItems = feedData
+    .filter(feed => !feed.loading && !feed.error && feed.items.length > 0)
+    .flatMap(feed => 
+      feed.items
+        .filter(item => {
+          if (!item.pubDate) return false;
+          try {
+            const itemDate = new Date(item.pubDate);
+            return isAfter(itemDate, twentyFourHoursAgo);
+          } catch (error) {
+            console.warn("Could not parse date:", item.pubDate);
+            return false;
+          }
+        })
+        .map(item => ({
+          title: item.title,
+          source: feed.title,
+          link: item.link,
+          pubDate: item.pubDate
+        }))
+    );
 
   if (tickerItems.length === 0) return null;
 
