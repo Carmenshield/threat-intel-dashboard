@@ -8,11 +8,17 @@ const TickerTape = () => {
     useFeed(feed.url, feed.title, feed.description)
   );
 
+  // Check if any feeds are still loading
+  const isAnyFeedLoading = feedData.some(feed => feed.loading);
+  
+  // Don't render until all feeds have finished loading
+  if (isAnyFeedLoading) return null;
+
   // Get all stories from all feeds published in the last 24 hours
   const twentyFourHoursAgo = subHours(new Date(), 24);
   
   const tickerItems = feedData
-    .filter(feed => !feed.loading && !feed.error && feed.items.length > 0)
+    .filter(feed => !feed.error && feed.items.length > 0)
     .flatMap(feed => 
       feed.items
         .filter(item => {
