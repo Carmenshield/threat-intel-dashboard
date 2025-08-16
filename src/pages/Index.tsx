@@ -3,6 +3,7 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Dashboard from "@/components/Dashboard";
 import SearchBar from "@/components/SearchBar";
+import TickerTape from "@/components/TickerTape";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -29,6 +30,8 @@ const Index = () => {
             </div>
           </div>
         </header>
+        
+        <TickerTape />
         
         <main className="container mx-auto py-6 px-4">
           <Dashboard />

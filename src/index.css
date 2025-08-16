@@ -71,3 +71,12 @@
 .react-grid-item.react-grid-placeholder {
   @apply bg-cyber-accent/30 border border-cyber-accent rounded;
 }
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
