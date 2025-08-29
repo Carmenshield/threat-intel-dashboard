@@ -10,6 +10,7 @@ export interface RssItem {
   categories?: string[];
   guid?: string;
   source?: string;
+  isLinkSafe?: boolean;
 }
 
 export interface RssFeed {

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { RssFeed, RssItem } from "@/types";
 import { toast } from "@/components/ui/sonner";
+import { validateFeedUrl, sanitizeText, isUrlSafe } from "@/utils/security";
 
 // A proxy API service to avoid CORS issues with RSS feeds
 const CORS_PROXY = "https://whateverorigin.org/get?url=";
@@ -36,20 +37,31 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
     
     // Parse the XML content
     const items = Array.from(xmlDoc.querySelectorAll("item")).map(item => {
-      const title = item.querySelector("title")?.textContent || "";
-      const link = item.querySelector("link")?.textContent || "";
-      const pubDate = item.querySelector("pubDate")?.textContent || "";
-      const creator = item.querySelector("dc\\:creator")?.textContent || 
-                     item.querySelector("creator")?.textContent || "";
-      const contentSnippet = item.querySelector("description")?.textContent || "";
+      const rawTitle = item.querySelector("title")?.textContent || "";
+      const rawLink = item.querySelector("link")?.textContent || "";
+      const rawPubDate = item.querySelector("pubDate")?.textContent || "";
+      const rawCreator = item.querySelector("dc\\:creator")?.textContent || 
+                        item.querySelector("creator")?.textContent || "";
+      const rawContentSnippet = item.querySelector("description")?.textContent || "";
+      
+      // Sanitize all content
+      const title = sanitizeText(rawTitle);
+      const link = rawLink.trim();
+      const pubDate = rawPubDate.trim();
+      const creator = sanitizeText(rawCreator);
+      const contentSnippet = sanitizeText(rawContentSnippet);
+      
+      // Validate link safety - keep unsafe links but mark them
+      const isLinkSafe = isUrlSafe(link);
       
       return {
         title,
-        link,
+        link: isLinkSafe ? link : "#", // Replace unsafe links with #
         pubDate,
         creator,
         contentSnippet,
-        source: new URL(feedUrl).hostname
+        source: new URL(feedUrl).hostname,
+        isLinkSafe // Add flag for UI to handle
       };
     });
     
@@ -62,6 +74,11 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
 
 // React Query hook to fetch RSS feeds
 export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed => {
+  // Validate feed URL before making request
+  const urlValidation = validateFeedUrl(feedUrl);
+  if (!urlValidation.isValid) {
+    console.warn(`Invalid feed URL: ${feedUrl}`, urlValidation.error);
+  }
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["rssFeed", feedUrl],
     queryFn: () => fetchRssFeed(feedUrl),

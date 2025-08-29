@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
+import { validateFeedUrl, sanitizeText } from "@/utils/security";
 
 interface FeedConfigProps {
   feedUrl: string;
@@ -26,20 +27,35 @@ const FeedConfigDialog: React.FC<FeedConfigProps> = ({
   const isNewFeed = feedUrl === "" && title === "";
 
   const handleSave = () => {
-    if (!newFeedUrl.trim() || !newTitle.trim()) {
+    const trimmedUrl = newFeedUrl.trim();
+    const trimmedTitle = newTitle.trim();
+    const trimmedDescription = newDescription.trim();
+    
+    if (!trimmedUrl || !trimmedTitle) {
       toast.error("Feed URL and title are required");
       return;
     }
 
-    if (!newFeedUrl.startsWith("http")) {
-      toast.error("Feed URL must be a valid URL");
+    // Validate feed URL with security checks
+    const urlValidation = validateFeedUrl(trimmedUrl);
+    if (!urlValidation.isValid) {
+      toast.error(urlValidation.error || "Invalid feed URL");
+      return;
+    }
+
+    // Sanitize text inputs
+    const safeTitle = sanitizeText(trimmedTitle);
+    const safeDescription = sanitizeText(trimmedDescription);
+    
+    if (!safeTitle) {
+      toast.error("Title contains invalid characters");
       return;
     }
 
     onSave({
-      feedUrl: newFeedUrl.trim(),
-      title: newTitle.trim(),
-      description: newDescription.trim() || undefined,
+      feedUrl: trimmedUrl,
+      title: safeTitle,
+      description: safeDescription || undefined,
     });
 
     toast.success(isNewFeed ? "New feed added" : "Feed configuration updated");

@@ -1,6 +1,7 @@
 import React from "react";
 import { useFeed, defaultFeeds } from "@/services/rssService";
 import { isAfter, subHours } from "date-fns";
+import { createSafeLink, sanitizeText } from "@/utils/security";
 
 const TickerTape = () => {
   // Fetch data from all feeds
@@ -45,25 +46,37 @@ const TickerTape = () => {
     <div className="bg-yellow-400 border-y-2 border-black overflow-hidden relative">
       <div className="flex animate-[scroll_15s_linear_infinite] hover:[animation-play-state:paused] whitespace-nowrap">
         {/* Duplicate content for seamless loop */}
-        {[...tickerItems, ...tickerItems].map((item, index) => (
-          <div key={index} className="inline-flex items-center px-8 py-2">
-            <span className="text-black font-medium text-sm">
-              <span className="font-bold text-xs uppercase tracking-wide">
-                {item.source}:
+        {[...tickerItems, ...tickerItems].map((item, index) => {
+          const safeLink = createSafeLink(item.link, item.title);
+          const safeTitle = sanitizeText(item.title);
+          const safeSource = sanitizeText(item.source);
+          
+          return (
+            <div key={index} className="inline-flex items-center px-8 py-2">
+              <span className="text-black font-medium text-sm">
+                <span className="font-bold text-xs uppercase tracking-wide">
+                  {safeSource}:
+                </span>
+                {" "}
+                {safeLink.isSafe ? (
+                  <a 
+                    href={safeLink.href} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    {safeTitle}
+                  </a>
+                ) : (
+                  <span className="text-red-600">
+                    {safeTitle} (Link Blocked)
+                  </span>
+                )}
               </span>
-              {" "}
-              <a 
-                href={item.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                {item.title}
-              </a>
-            </span>
-            <span className="mx-4 text-black">•</span>
-          </div>
-        ))}
+              <span className="mx-4 text-black">•</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -5,9 +5,10 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink, AlertCircle, Settings, Trash } from "lucide-react";
+import { ExternalLink, AlertCircle, Settings, Trash, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import FeedConfigDialog from "@/components/FeedConfigDialog";
+import { createSafeLink, sanitizeText } from "@/utils/security";
 
 export const FeedWidget: React.FC<FeedWidgetProps> = ({
   feedUrl,
@@ -93,32 +94,59 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
           <div className="text-gray-500">No items available</div>
         ) : (
           <div className="space-y-3">
-            {feed.items.slice(0, limit).map((item, idx) => (
-              <div key={idx} className="pb-2 border-b border-gray-700 last:border-0">
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block"
-                >
-                  <h3 className="font-medium text-sm text-white group-hover:text-cyber-highlight">
-                    {item.title}
-                    <ExternalLink className="inline-block ml-1 w-3 h-3" />
-                  </h3>
-                  <div className="flex justify-between items-center text-xs mt-1">
-                    <span className="text-gray-400">{formatDate(item.pubDate)}</span>
-                    {item.creator && (
-                      <span className="text-gray-500 truncate ml-2">{item.creator}</span>
-                    )}
-                  </div>
-                  {item.contentSnippet && (
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                      {item.contentSnippet.replace(/<[^>]*>?/gm, "")}
-                    </p>
+            {feed.items.slice(0, limit).map((item, idx) => {
+              const safeLink = createSafeLink(item.link, item.title);
+              const safeTitle = sanitizeText(item.title);
+              const safeCreator = sanitizeText(item.creator || '');
+              const safeContent = sanitizeText(item.contentSnippet || '');
+              
+              return (
+                <div key={idx} className="pb-2 border-b border-gray-700 last:border-0">
+                  {safeLink.isSafe ? (
+                    <a
+                      href={safeLink.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block"
+                    >
+                      <h3 className="font-medium text-sm text-white group-hover:text-cyber-highlight">
+                        {safeTitle}
+                        <ExternalLink className="inline-block ml-1 w-3 h-3" />
+                      </h3>
+                      <div className="flex justify-between items-center text-xs mt-1">
+                        <span className="text-gray-400">{formatDate(item.pubDate)}</span>
+                        {safeCreator && (
+                          <span className="text-gray-500 truncate ml-2">{safeCreator}</span>
+                        )}
+                      </div>
+                      {safeContent && (
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                          {safeContent}
+                        </p>
+                      )}
+                    </a>
+                  ) : (
+                    <div className="group block">
+                      <h3 className="font-medium text-sm text-red-400 flex items-center">
+                        <Shield className="inline-block mr-1 w-3 h-3" />
+                        {safeTitle} (Unsafe Link Blocked)
+                      </h3>
+                      <div className="flex justify-between items-center text-xs mt-1">
+                        <span className="text-gray-400">{formatDate(item.pubDate)}</span>
+                        {safeCreator && (
+                          <span className="text-gray-500 truncate ml-2">{safeCreator}</span>
+                        )}
+                      </div>
+                      {safeContent && (
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                          {safeContent}
+                        </p>
+                      )}
+                    </div>
                   )}
-                </a>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>
