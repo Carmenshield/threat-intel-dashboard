@@ -2,6 +2,7 @@ import React from "react";
 import { useFeed, defaultFeeds } from "@/services/rssService";
 import { isAfter, subHours } from "date-fns";
 import { createSafeLink, sanitizeText } from "@/utils/security";
+import { getAllWatchlistMatches } from "@/services/watchlistService";
 
 const TickerTape = () => {
   // Fetch data from all feeds
@@ -18,7 +19,7 @@ const TickerTape = () => {
   // Get all stories from all feeds published in the last 24 hours
   const twentyFourHoursAgo = subHours(new Date(), 24);
   
-  const tickerItems = feedData
+  const recentFeedItems = feedData
     .filter(feed => !feed.error && feed.items.length > 0)
     .flatMap(feed => 
       feed.items
@@ -39,6 +40,22 @@ const TickerTape = () => {
           pubDate: item.pubDate
         }))
     );
+
+  // Get watchlist matches (all time, not just last 24 hours)
+  const watchlistMatches = getAllWatchlistMatches().map(item => ({
+    title: item.title,
+    source: `${item.source} (Watchlist)`,
+    link: item.link,
+    pubDate: item.pubDate
+  }));
+
+  // Combine recent feed items with watchlist matches, removing duplicates
+  const allItems = [...recentFeedItems, ...watchlistMatches];
+  const uniqueItems = allItems.filter((item, index, arr) => 
+    arr.findIndex(other => other.link === item.link) === index
+  );
+
+  const tickerItems = uniqueItems;
 
   if (tickerItems.length === 0) return null;
 

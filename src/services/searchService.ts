@@ -1,5 +1,6 @@
 
 import { RssItem, SearchResult } from "@/types";
+import { updateWatchlistSearchIndex } from "./watchlistService";
 
 // In-memory search index since we don't have a real Algolia account setup
 let searchIndex: RssItem[] = [];
@@ -12,6 +13,9 @@ export const addToSearchIndex = (items: RssItem[]) => {
   );
   
   searchIndex = [...searchIndex, ...newItems];
+  
+  // Update watchlist service with the new index
+  updateWatchlistSearchIndex(searchIndex);
 };
 
 // Simple search function to filter items

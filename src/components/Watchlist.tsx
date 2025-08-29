@@ -1,0 +1,135 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
+import { getWatchlistMatches } from "@/services/watchlistService";
+
+interface WatchlistItem {
+  keyword: string;
+  count: number;
+}
+
+const Watchlist = () => {
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [watchlistWithCounts, setWatchlistWithCounts] = useState<WatchlistItem[]>([]);
+
+  // Load watchlist from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("watchlist");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setWatchlist(parsed);
+      } catch (error) {
+        console.warn("Failed to parse watchlist from localStorage");
+      }
+    }
+  }, []);
+
+  // Save watchlist to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  // Update counts whenever watchlist changes
+  useEffect(() => {
+    const updateCounts = () => {
+      const withCounts = watchlist.map(keyword => ({
+        keyword,
+        count: getWatchlistMatches(keyword).length
+      }));
+      setWatchlistWithCounts(withCounts);
+    };
+
+    updateCounts();
+    // Update counts every 30 seconds
+    const interval = setInterval(updateCounts, 30000);
+    return () => clearInterval(interval);
+  }, [watchlist]);
+
+  const addKeyword = () => {
+    const keyword = newKeyword.trim().toLowerCase();
+    if (!keyword) return;
+    
+    if (watchlist.includes(keyword)) {
+      toast.error("Keyword already in watchlist");
+      return;
+    }
+
+    setWatchlist(prev => [...prev, keyword]);
+    setNewKeyword("");
+    toast.success(`Added "${keyword}" to watchlist`);
+  };
+
+  const removeKeyword = (keyword: string) => {
+    setWatchlist(prev => prev.filter(k => k !== keyword));
+    toast.success(`Removed "${keyword}" from watchlist`);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      addKeyword();
+    }
+  };
+
+  return (
+    <Card className="bg-cyber-card border-cyber-border">
+      <CardHeader>
+        <CardTitle className="text-cyber-highlight flex items-center gap-2">
+          <span>Watchlist</span>
+          <Badge variant="secondary" className="text-xs">
+            {watchlistWithCounts.reduce((sum, item) => sum + item.count, 0)} matches
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter keyword to watch..."
+            value={newKeyword}
+            onChange={(e) => setNewKeyword(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="bg-cyber-background border-cyber-border text-white placeholder:text-gray-400"
+          />
+          <Button onClick={addKeyword} size="sm" className="shrink-0">
+            <Plus className="w-4 h-4" />
+            Add
+          </Button>
+        </div>
+        
+        {watchlistWithCounts.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-gray-300">Tracked Keywords:</h4>
+            <div className="flex flex-wrap gap-2">
+              {watchlistWithCounts.map(({ keyword, count }) => (
+                <div
+                  key={keyword}
+                  className="flex items-center gap-1 bg-cyber-background rounded-full px-3 py-1 border border-cyber-border"
+                >
+                  <span className="text-sm text-white">{keyword}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {count}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeKeyword(keyword)}
+                    className="h-4 w-4 p-0 hover:bg-red-500/20"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default Watchlist;
