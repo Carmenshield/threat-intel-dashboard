@@ -12,7 +12,11 @@ interface WatchlistItem {
   count: number;
 }
 
-const Watchlist = () => {
+interface WatchlistProps {
+  onKeywordClick?: (keyword: string) => void;
+}
+
+const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState("");
   const [watchlistWithCounts, setWatchlistWithCounts] = useState<WatchlistItem[]>([]);
@@ -110,7 +114,12 @@ const Watchlist = () => {
                   key={keyword}
                   className="flex items-center gap-1 bg-cyber-background rounded-full px-3 py-1 border border-cyber-border"
                 >
-                  <span className="text-sm text-white">{keyword}</span>
+                  <button
+                    onClick={() => onKeywordClick?.(keyword)}
+                    className="text-sm text-white hover:text-cyber-highlight transition-colors cursor-pointer"
+                  >
+                    {keyword}
+                  </button>
                   <Badge variant="outline" className="text-xs">
                     {count}
                   </Badge>

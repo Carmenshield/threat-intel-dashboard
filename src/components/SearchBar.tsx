@@ -9,16 +9,29 @@ import { ExternalLink, Search, X } from "lucide-react";
 
 interface SearchBarProps {
   className?: string;
+  searchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
-  const [query, setQuery] = useState<string>("");
+export const SearchBar: React.FC<SearchBarProps> = ({ className, searchQuery, onSearchQueryChange }) => {
+  const [query, setQuery] = useState<string>(searchQuery || "");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const handleSearch = () => {
-    if (query.trim()) {
-      const searchResults = searchItems(query);
+  // Update local query when external searchQuery changes
+  React.useEffect(() => {
+    if (searchQuery !== undefined) {
+      setQuery(searchQuery);
+      if (searchQuery.trim()) {
+        handleSearch(searchQuery);
+      }
+    }
+  }, [searchQuery]);
+
+  const handleSearch = (searchTerm?: string) => {
+    const term = searchTerm || query;
+    if (term.trim()) {
+      const searchResults = searchItems(term);
       setResults(searchResults);
       setIsOpen(true);
     }
@@ -44,7 +57,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
             type="text"
             placeholder="Search all news sources..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              onSearchQueryChange?.(e.target.value);
+            }}
             onKeyDown={handleKeyDown}
             className="bg-cyber-card border-cyber-accent/30 pr-8"
           />
@@ -58,7 +74,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
           )}
         </div>
         <Button 
-          onClick={handleSearch} 
+          onClick={() => handleSearch()} 
           className="bg-cyber-accent hover:bg-cyber-accent/80"
         >
           <Search className="mr-2" size={16} />

@@ -10,6 +10,11 @@ import Watchlist from "@/components/Watchlist";
 const queryClient = new QueryClient();
 
 const Index = () => {
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
+
+  const handleWatchlistKeywordClick = (keyword: string) => {
+    setSearchQuery(keyword);
+  };
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-cyber-background text-white">
@@ -27,7 +32,10 @@ const Index = () => {
             </div>
             
             <div className="mt-4">
-              <SearchBar />
+              <SearchBar 
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+              />
             </div>
           </div>
         </header>
@@ -39,7 +47,7 @@ const Index = () => {
         </main>
         
         <div className="container mx-auto px-4 pb-6">
-          <Watchlist />
+          <Watchlist onKeywordClick={handleWatchlistKeywordClick} />
         </div>
         
         <footer className="py-4 px-6 border-t border-gray-800 bg-cyber-card">
