@@ -1,17 +1,30 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useFeed, defaultFeeds } from "@/services/rssService";
 import { isAfter, subHours } from "date-fns";
 import { createSafeLink, sanitizeText } from "@/utils/security";
 import { getAllWatchlistMatches } from "@/services/watchlistService";
 
-const TickerTape = () => {
+interface TickerTapeProps {
+  onLoadComplete?: () => void;
+}
+
+const TickerTape: React.FC<TickerTapeProps> = ({ onLoadComplete }) => {
   // Fetch data from all feeds
   const feedData = defaultFeeds.map(feed => 
     useFeed(feed.url, feed.title, feed.description)
   );
+  const hasCalledOnLoad = useRef(false);
 
   // Check if any feeds are still loading
   const isAnyFeedLoading = feedData.some(feed => feed.loading);
+  
+  // Call onLoadComplete once when loading finishes
+  useEffect(() => {
+    if (!isAnyFeedLoading && !hasCalledOnLoad.current && onLoadComplete) {
+      hasCalledOnLoad.current = true;
+      onLoadComplete();
+    }
+  }, [isAnyFeedLoading, onLoadComplete]);
   
   // Don't render until all feeds have finished loading
   if (isAnyFeedLoading) return null;

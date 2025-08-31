@@ -17,7 +17,7 @@ interface WatchlistProps {
   onKeywordClick?: (keyword: string) => void;
 }
 
-const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
+const Watchlist = React.forwardRef<{ updateCounts: () => void }, WatchlistProps>(({ onKeywordClick }, ref) => {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState("");
   const [watchlistWithCounts, setWatchlistWithCounts] = useState<WatchlistItem[]>([]);
@@ -43,20 +43,25 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
   }, [watchlist]);
 
   // Update counts whenever watchlist changes
-  useEffect(() => {
-    const updateCounts = () => {
-      const withCounts = watchlist.map(keyword => ({
-        keyword,
-        count: getWatchlistMatches(keyword).length
-      }));
-      setWatchlistWithCounts(withCounts);
-    };
+  const updateCounts = React.useCallback(() => {
+    const withCounts = watchlist.map(keyword => ({
+      keyword,
+      count: getWatchlistMatches(keyword).length
+    }));
+    setWatchlistWithCounts(withCounts);
+  }, [watchlist]);
 
+  React.useEffect(() => {
     updateCounts();
     // Update counts every 30 seconds
     const interval = setInterval(updateCounts, 30000);
     return () => clearInterval(interval);
-  }, [watchlist]);
+  }, [updateCounts]);
+
+  // Expose updateCounts method via ref
+  React.useImperativeHandle(ref, () => ({
+    updateCounts
+  }), [updateCounts]);
 
   const addKeyword = () => {
     const keyword = newKeyword.trim().toLowerCase();
@@ -184,6 +189,8 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
       </CardContent>
     </Card>
   );
-};
+});
+
+Watchlist.displayName = "Watchlist";
 
 export default Watchlist;

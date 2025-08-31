@@ -7,9 +7,15 @@ import Watchlist from "@/components/Watchlist";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const watchlistRef = React.useRef<{ updateCounts: () => void }>(null);
 
   const handleWatchlistKeywordClick = (keyword: string) => {
     setSearchQuery(keyword);
+  };
+
+  const handleTickerTapeLoadComplete = () => {
+    // Trigger watchlist count update after ticker tape loads
+    watchlistRef.current?.updateCounts();
   };
   return (
     <div className="min-h-screen bg-cyber-background text-white">
@@ -36,10 +42,10 @@ const Index = () => {
         </header>
         
         <div className="container mx-auto px-4 py-4">
-          <Watchlist onKeywordClick={handleWatchlistKeywordClick} />
+          <Watchlist ref={watchlistRef} onKeywordClick={handleWatchlistKeywordClick} />
         </div>
         
-        <TickerTape />
+        <TickerTape onLoadComplete={handleTickerTapeLoadComplete} />
         
         <main className="container mx-auto py-6 px-4">
           <Dashboard />
