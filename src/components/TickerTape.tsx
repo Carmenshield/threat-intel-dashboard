@@ -61,7 +61,7 @@ const TickerTape = () => {
 
   return (
     <div className="bg-yellow-400 border-y-2 border-black overflow-hidden relative">
-      <div className="flex animate-[scroll_60s_linear_infinite] hover:[animation-play-state:paused] whitespace-nowrap">
+      <div className="flex animate-[scroll_30s_linear_infinite] hover:[animation-play-state:paused] whitespace-nowrap">
         {/* Duplicate content for seamless loop */}
         {[...tickerItems, ...tickerItems].map((item, index) => {
           const safeLink = createSafeLink(item.link, item.title);
