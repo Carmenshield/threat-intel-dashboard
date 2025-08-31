@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Minus, Eye } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { getWatchlistMatches } from "@/services/watchlistService";
 
@@ -22,6 +22,7 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
   const [newKeyword, setNewKeyword] = useState("");
   const [watchlistWithCounts, setWatchlistWithCounts] = useState<WatchlistItem[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Load watchlist from localStorage on mount
   useEffect(() => {
@@ -83,14 +84,44 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
     }
   };
 
+  if (isMinimized) {
+    return (
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="flex items-center gap-2 px-4 py-2 bg-cyber-card border border-cyber-border rounded-lg hover:bg-cyber-card/80 transition-colors"
+        >
+          <Eye className="w-4 h-4 text-cyber-highlight" />
+          <span className="text-cyber-highlight font-medium">Watchlist</span>
+          <span className="text-lg">👀</span>
+          {watchlistWithCounts.length > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {watchlistWithCounts.reduce((sum, item) => sum + item.count, 0)}
+            </Badge>
+          )}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <Card className="bg-cyber-card border-cyber-border">
       <CardHeader>
-        <CardTitle className="text-cyber-highlight flex items-center gap-2">
-          <span>Watchlist</span>
-          <Badge variant="secondary" className="text-xs">
-            {watchlistWithCounts.reduce((sum, item) => sum + item.count, 0)} matches
-          </Badge>
+        <CardTitle className="text-cyber-highlight flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span>Watchlist</span>
+            <Badge variant="secondary" className="text-xs">
+              {watchlistWithCounts.reduce((sum, item) => sum + item.count, 0)} matches
+            </Badge>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsMinimized(true)}
+            className="h-6 w-6 p-0 hover:bg-cyber-background"
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -125,30 +156,30 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
         
         {watchlistWithCounts.length > 0 && (
           <div className="flex flex-wrap gap-2">
-              {watchlistWithCounts.map(({ keyword, count }) => (
-                <div
-                  key={keyword}
-                  className="flex items-center gap-1 bg-cyber-background rounded-full px-3 py-1 border border-cyber-border"
+            {watchlistWithCounts.map(({ keyword, count }) => (
+              <div
+                key={keyword}
+                className="flex items-center gap-1 bg-cyber-background rounded-full px-3 py-1 border border-cyber-border"
+              >
+                <button
+                  onClick={() => onKeywordClick?.(keyword)}
+                  className="text-sm text-white hover:text-cyber-highlight transition-colors cursor-pointer"
                 >
-                  <button
-                    onClick={() => onKeywordClick?.(keyword)}
-                    className="text-sm text-white hover:text-cyber-highlight transition-colors cursor-pointer"
-                  >
-                    {keyword}
-                  </button>
-                  <Badge variant="outline" className="text-xs">
-                    {count}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeKeyword(keyword)}
-                    className="h-4 w-4 p-0 hover:bg-red-500/20"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
+                  {keyword}
+                </button>
+                <Badge variant="outline" className="text-xs">
+                  {count}
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => removeKeyword(keyword)}
+                  className="h-4 w-4 p-0 hover:bg-red-500/20"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
