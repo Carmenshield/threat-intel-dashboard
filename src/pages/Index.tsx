@@ -1,13 +1,9 @@
 
 import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Dashboard from "@/components/Dashboard";
 import SearchBar from "@/components/SearchBar";
 import TickerTape from "@/components/TickerTape";
 import Watchlist from "@/components/Watchlist";
-
-// Create a client
-const queryClient = new QueryClient();
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -16,8 +12,7 @@ const Index = () => {
     setSearchQuery(keyword);
   };
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-cyber-background text-white">
+    <div className="min-h-screen bg-cyber-background text-white">
         <header className="py-4 px-6 border-b border-gray-800 bg-cyber-card">
           <div className="container mx-auto">
             <div className="flex justify-between items-center">
@@ -58,7 +53,6 @@ const Index = () => {
           </div>
         </footer>
       </div>
-    </QueryClientProvider>
   );
 };
 
