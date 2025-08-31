@@ -153,7 +153,6 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
             </PopoverContent>
           </Popover>
         </div>
-        {updateCounts();}
         {watchlistWithCounts.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {watchlistWithCounts.map(({ keyword, count }) => (
