@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { getWatchlistMatches } from "@/services/watchlistService";
@@ -20,6 +21,7 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState("");
   const [watchlistWithCounts, setWatchlistWithCounts] = useState<WatchlistItem[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   // Load watchlist from localStorage on mount
   useEffect(() => {
@@ -66,6 +68,7 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
 
     setWatchlist(prev => [...prev, keyword]);
     setNewKeyword("");
+    setIsPopoverOpen(false);
     toast.success(`Added "${keyword}" to watchlist`);
   };
 
@@ -91,24 +94,37 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter keyword to watch..."
-            value={newKeyword}
-            onChange={(e) => setNewKeyword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="bg-cyber-background border-cyber-border text-white placeholder:text-gray-400"
-          />
-          <Button onClick={addKeyword} size="sm" className="shrink-0">
-            <Plus className="w-4 h-4" />
-            Add
-          </Button>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-300">Tracked Keywords:</span>
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button size="sm" className="shrink-0">
+                <Plus className="w-4 h-4 mr-1" />
+                Add
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-cyber-card border-cyber-border">
+              <div className="space-y-3">
+                <h4 className="font-medium text-white">Add Keyword to Watchlist</h4>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter keyword to watch..."
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="bg-cyber-background border-cyber-border text-white placeholder:text-gray-400"
+                  />
+                  <Button onClick={addKeyword} size="sm">
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         
         {watchlistWithCounts.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-300">Tracked Keywords:</h4>
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
               {watchlistWithCounts.map(({ keyword, count }) => (
                 <div
                   key={keyword}
@@ -133,7 +149,6 @@ const Watchlist: React.FC<WatchlistProps> = ({ onKeywordClick }) => {
                   </Button>
                 </div>
               ))}
-            </div>
           </div>
         )}
       </CardContent>

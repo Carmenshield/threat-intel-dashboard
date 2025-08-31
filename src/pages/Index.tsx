@@ -40,15 +40,15 @@ const Index = () => {
           </div>
         </header>
         
+        <div className="container mx-auto px-4 py-4">
+          <Watchlist onKeywordClick={handleWatchlistKeywordClick} />
+        </div>
+        
         <TickerTape />
         
         <main className="container mx-auto py-6 px-4">
           <Dashboard />
         </main>
-        
-        <div className="container mx-auto px-4 pb-6">
-          <Watchlist onKeywordClick={handleWatchlistKeywordClick} />
-        </div>
         
         <footer className="py-4 px-6 border-t border-gray-800 bg-cyber-card">
           <div className="container mx-auto text-center text-sm text-gray-500">
