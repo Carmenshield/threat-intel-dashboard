@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import FeedWidget from "@/components/FeedWidget";
 import { defaultFeeds } from "@/services/rssService";
@@ -20,14 +20,23 @@ interface FeedConfig {
   title: string;
   url: string;
   description?: string;
+  isUserAdded?: boolean;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
-  // Initialize feeds with the default feeds
-  const [feeds, setFeeds] = useState<FeedConfig[]>(defaultFeeds);
+  // Initialize feeds with default feeds + user feeds from localStorage
+  const [feeds, setFeeds] = useState<FeedConfig[]>(() => {
+    const userFeeds = JSON.parse(localStorage.getItem('dashboard-user-feeds') || '[]');
+    return [...defaultFeeds, ...userFeeds];
+  });
   
   // Define the initial layout for different screen sizes
-  const [layouts, setLayouts] = useState({
+  const [layouts, setLayouts] = useState(() => {
+    const savedLayouts = localStorage.getItem('dashboard-layouts');
+    if (savedLayouts) {
+      return JSON.parse(savedLayouts);
+    }
+    return {
     lg: [
       { i: "feed-0", x: 0, y: 0, w: 4, h: 2, minW: 2, minH: 1 },
       { i: "feed-1", x: 4, y: 0, w: 4, h: 2, minW: 2, minH: 1 },
@@ -52,12 +61,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
       { i: "feed-4", x: 0, y: 4, w: 6, h: 2, minW: 3, minH: 1 },
       { i: "feed-5", x: 6, y: 4, w: 6, h: 2, minW: 3, minH: 1 },
     ],
+    };
   });
+
+  // Save user feeds to localStorage whenever feeds change
+  useEffect(() => {
+    const userFeeds = feeds.filter(feed => feed.isUserAdded);
+    localStorage.setItem('dashboard-user-feeds', JSON.stringify(userFeeds));
+  }, [feeds]);
+
+  // Save layouts to localStorage whenever layouts change
+  useEffect(() => {
+    localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
+  }, [layouts]);
 
   // Handle feed configuration changes
   const handleFeedConfigChange = (index: number, config: { feedUrl: string; title: string; description?: string }) => {
     const updatedFeeds = [...feeds];
     updatedFeeds[index] = {
+      ...updatedFeeds[index],
       title: config.title,
       url: config.feedUrl,
       description: config.description,
@@ -96,11 +118,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
   const handleAddFeed = (config: { feedUrl: string; title: string; description?: string }) => {
     const newFeedIndex = feeds.length;
     
-    // Add the new feed to the feeds array
+    // Add the new feed to the feeds array (mark as user-added)
     setFeeds([...feeds, {
       title: config.title,
       url: config.feedUrl,
-      description: config.description
+      description: config.description,
+      isUserAdded: true
     }]);
     
     // Add layout items for the new feed
@@ -122,6 +145,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
     
     setLayouts(updatedLayouts);
     toast.success(`Added new feed: ${config.title}`);
+  };
+
+  // Handle layout changes and save to localStorage
+  const handleLayoutChange = (currentLayout: any, allLayouts: any) => {
+    setLayouts(allLayouts);
   };
 
   return (
@@ -153,6 +181,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
         margin={[16, 16]}
         containerPadding={[0, 0]}
         draggableHandle=".cursor-move"
+        onLayoutChange={handleLayoutChange}
       >
         {feeds.map((feed, index) => (
           <div key={`feed-${index}`} className="grid-item">
@@ -162,7 +191,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
               description={feed.description} 
               limit={10}
               onConfigChange={(config) => handleFeedConfigChange(index, config)}
-              onDelete={() => handleDeleteFeed(index)}
+              onDelete={feed.isUserAdded ? () => handleDeleteFeed(index) : undefined}
             />
           </div>
         ))}

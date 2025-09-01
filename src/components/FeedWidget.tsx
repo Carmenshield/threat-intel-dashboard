@@ -5,7 +5,7 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink, AlertCircle, Settings, Trash, Shield } from "lucide-react";
+import { ExternalLink, AlertCircle, Settings, Trash, Shield, GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import FeedConfigDialog from "@/components/FeedConfigDialog";
 import { createSafeLink, sanitizeText } from "@/utils/security";
@@ -47,6 +47,9 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
       <CardHeader className="pb-2 bg-cyber-card">
         <CardTitle className="text-lg text-cyber-highlight flex justify-between items-center">
           <div className="flex-1 flex items-center">
+            <div className="cursor-move mr-2 p-1 rounded hover:bg-gray-700 transition-colors" title="Drag to reorder">
+              <GripVertical className="w-4 h-4 text-gray-400" />
+            </div>
             {title}
             {description && (
               <span className="text-xs text-gray-400 truncate ml-2 flex-1">
