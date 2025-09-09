@@ -4,7 +4,7 @@ import { toast } from "@/components/ui/sonner";
 import { validateFeedUrl, sanitizeText, isUrlSafe } from "@/utils/security";
 
 // A proxy API service to avoid CORS issues with RSS feeds
-const CORS_PROXY = "https://whateverorigin.org/get?url=";
+const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 
 // Fetch and parse RSS feed
 export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
@@ -22,14 +22,10 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
       throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
     }
     
-    const data = await response.json();
-    
-    if (!data.contents) {
-      throw new Error("Invalid response from proxy service");
-    }
+    const data = await response.text();
     
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+    const xmlDoc = parser.parseFromString(data, "text/xml");
     
     if (xmlDoc.querySelector("parsererror")) {
       throw new Error("Failed to parse XML content");
