@@ -6,16 +6,16 @@ import { validateFeedUrl, sanitizeText, isUrlSafe } from "@/utils/security";
 // Array of CORS proxy services with fallback support
 const CORS_PROXIES = [
   { 
-    url: "https://api.allorigins.win/raw?url=", 
-    type: "raw" as const 
-  },
-  { 
-    url: "https://proxy.corsfix.com/?url=", 
-    type: "raw" as const 
-  },
-  { 
     url: "https://api.allorigins.win/get?url=", 
     type: "json" as const 
+  },
+  { 
+    url: "https://corsproxy.io/?url=", 
+    type: "raw" as const 
+  },
+  { 
+    url: "https://api.allorigins.win/raw?url=", 
+    type: "raw" as const 
   }
 ];
 
