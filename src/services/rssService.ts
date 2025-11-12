@@ -3,69 +3,104 @@ import { RssFeed, RssItem } from "@/types";
 import { toast } from "@/components/ui/sonner";
 import { validateFeedUrl, sanitizeText, isUrlSafe } from "@/utils/security";
 
-// A proxy API service to avoid CORS issues with RSS feeds
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
-
-// Fetch and parse RSS feed
-export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
-  try {
-    console.log(`Fetching RSS feed: ${feedUrl}`);
-    const encodedUrl = encodeURIComponent(feedUrl);
-    const response = await fetch(`${CORS_PROXY}${encodedUrl}`, {
-      headers: {
-        'Accept': '*/*',
-      },
-      cache: 'no-cache',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.text();
-    
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data, "text/xml");
-    
-    if (xmlDoc.querySelector("parsererror")) {
-      throw new Error("Failed to parse XML content");
-    }
-    
-    // Parse the XML content
-    const items = Array.from(xmlDoc.querySelectorAll("item")).map(item => {
-      const rawTitle = item.querySelector("title")?.textContent || "";
-      const rawLink = item.querySelector("link")?.textContent || "";
-      const rawPubDate = item.querySelector("pubDate")?.textContent || "";
-      const rawCreator = item.querySelector("dc\\:creator")?.textContent || 
-                        item.querySelector("creator")?.textContent || "";
-      const rawContentSnippet = item.querySelector("description")?.textContent || "";
-      
-      // Sanitize all content
-      const title = sanitizeText(rawTitle);
-      const link = rawLink.trim();
-      const pubDate = rawPubDate.trim();
-      const creator = sanitizeText(rawCreator);
-      const contentSnippet = sanitizeText(rawContentSnippet);
-      
-      // Validate link safety - keep unsafe links but mark them
-      const isLinkSafe = isUrlSafe(link);
-      
-      return {
-        title,
-        link: isLinkSafe ? link : "#", // Replace unsafe links with #
-        pubDate,
-        creator,
-        contentSnippet,
-        source: new URL(feedUrl).hostname,
-        isLinkSafe // Add flag for UI to handle
-      };
-    });
-    
-    return items;
-  } catch (error) {
-    console.error("Error fetching RSS feed:", error);
-    throw error;
+// Array of CORS proxy services with fallback support
+const CORS_PROXIES = [
+  { 
+    url: "https://api.allorigins.win/raw?url=", 
+    type: "raw" as const 
+  },
+  { 
+    url: "https://proxy.corsfix.com/?url=", 
+    type: "raw" as const 
+  },
+  { 
+    url: "https://api.allorigins.win/get?url=", 
+    type: "json" as const 
   }
+];
+
+// Fetch and parse RSS feed with fallback proxy support
+export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
+  const encodedUrl = encodeURIComponent(feedUrl);
+  let lastError: Error | null = null;
+  
+  // Try each proxy in sequence
+  for (const proxy of CORS_PROXIES) {
+    try {
+      console.log(`Fetching RSS feed: ${feedUrl} via ${proxy.url}`);
+      const response = await fetch(`${proxy.url}${encodedUrl}`, {
+        headers: {
+          'Accept': '*/*',
+        },
+        cache: 'no-cache',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
+      }
+      
+      let xmlContent: string;
+      
+      if (proxy.type === "json") {
+        const jsonData = await response.json();
+        xmlContent = jsonData.contents || jsonData.data || "";
+        if (!xmlContent) {
+          throw new Error("Invalid response from proxy service");
+        }
+      } else {
+        xmlContent = await response.text();
+      }
+      
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+      
+      if (xmlDoc.querySelector("parsererror")) {
+        throw new Error("Failed to parse XML content");
+      }
+    
+      // Parse the XML content - if successful, return immediately
+      const items = Array.from(xmlDoc.querySelectorAll("item")).map(item => {
+        const rawTitle = item.querySelector("title")?.textContent || "";
+        const rawLink = item.querySelector("link")?.textContent || "";
+        const rawPubDate = item.querySelector("pubDate")?.textContent || "";
+        const rawCreator = item.querySelector("dc\\:creator")?.textContent || 
+                          item.querySelector("creator")?.textContent || "";
+        const rawContentSnippet = item.querySelector("description")?.textContent || "";
+        
+        // Sanitize all content
+        const title = sanitizeText(rawTitle);
+        const link = rawLink.trim();
+        const pubDate = rawPubDate.trim();
+        const creator = sanitizeText(rawCreator);
+        const contentSnippet = sanitizeText(rawContentSnippet);
+        
+        // Validate link safety - keep unsafe links but mark them
+        const isLinkSafe = isUrlSafe(link);
+        
+        return {
+          title,
+          link: isLinkSafe ? link : "#", // Replace unsafe links with #
+          pubDate,
+          creator,
+          contentSnippet,
+          source: new URL(feedUrl).hostname,
+          isLinkSafe // Add flag for UI to handle
+        };
+      });
+      
+      console.log(`Successfully fetched RSS feed via ${proxy.url}`);
+      return items;
+      
+    } catch (error) {
+      console.warn(`Failed to fetch via ${proxy.url}:`, error);
+      lastError = error as Error;
+      // Continue to next proxy
+    }
+  }
+  
+  // If all proxies failed, throw the last error
+  console.error("Error fetching RSS feed from all proxies:", lastError);
+  throw lastError || new Error("Failed to fetch RSS feed from all available proxies");
 };
 
 // React Query hook to fetch RSS feeds
