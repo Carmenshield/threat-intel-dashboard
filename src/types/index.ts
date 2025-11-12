@@ -21,6 +21,7 @@ export interface RssFeed {
   link?: string;
   loading: boolean;
   error: boolean;
+  refetch?: () => void;
 }
 
 export interface FeedWidgetProps {

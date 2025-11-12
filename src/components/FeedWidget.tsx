@@ -5,7 +5,7 @@ import { useFeed } from "@/services/rssService";
 import { addToSearchIndex } from "@/services/searchService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SkeletonNews from "@/components/SkeletonNews";
-import { ExternalLink, AlertCircle, Settings, Trash, Shield, GripVertical } from "lucide-react";
+import { ExternalLink, AlertCircle, Settings, Trash, Shield, GripVertical, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import FeedConfigDialog from "@/components/FeedConfigDialog";
 import { createSafeLink, sanitizeText } from "@/utils/security";
@@ -89,9 +89,19 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
         {feed.loading ? (
           <SkeletonNews count={limit} />
         ) : feed.error ? (
-          <div className="text-red-400 flex items-center">
-            <AlertCircle className="w-4 h-4 mr-2" />
-            Failed to load feed
+          <div className="flex flex-col items-center justify-center py-8 space-y-3">
+            <div className="text-red-400 flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Failed to load feed
+            </div>
+            <button
+              onClick={() => feed.refetch?.()}
+              className="flex items-center gap-2 px-4 py-2 bg-cyber-accent/20 hover:bg-cyber-accent/30 text-cyber-highlight rounded-md transition-colors"
+              title="Retry loading feed"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </button>
           </div>
         ) : feed.items.length === 0 ? (
           <div className="text-gray-500">No items available</div>
