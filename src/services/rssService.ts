@@ -104,13 +104,13 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
 };
 
 // React Query hook to fetch RSS feeds
-export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed => {
+export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed & { refetch: () => void } => {
   // Validate feed URL before making request
   const urlValidation = validateFeedUrl(feedUrl);
   if (!urlValidation.isValid) {
     console.warn(`Invalid feed URL: ${feedUrl}`, urlValidation.error);
   }
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["rssFeed", feedUrl],
     queryFn: () => fetchRssFeed(feedUrl),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -132,6 +132,9 @@ export const useFeed = (feedUrl: string, title: string, description?: string): R
     description,
     loading: isLoading,
     error: isError,
+    refetch: () => {
+      refetch();
+    }
   };
 };
 
