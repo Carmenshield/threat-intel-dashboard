@@ -30,6 +30,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
     return [...defaultFeeds, ...userFeeds];
   });
   
+  const [feedLoadingStates, setFeedLoadingStates] = useState<Record<number, boolean>>({});
+  
   // Define the initial layout for different screen sizes
   const [layouts, setLayouts] = useState(() => {
     const savedLayouts = localStorage.getItem('dashboard-layouts');
@@ -152,12 +154,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
     setLayouts(allLayouts);
   };
 
+  const loadedCount = Object.values(feedLoadingStates).filter(isLoading => !isLoading).length;
+  const totalCount = feeds.length;
+  const isAnyLoading = Object.values(feedLoadingStates).some(isLoading => isLoading);
+
   return (
     <div className={className}>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-between items-center">
+        {isAnyLoading && (
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <div className="animate-pulse w-2 h-2 bg-cyber-highlight rounded-full"></div>
+            Loading feeds: {loadedCount}/{totalCount}
+          </div>
+        )}
+        {!isAnyLoading && totalCount > 0 && (
+          <div className="text-sm text-muted-foreground">
+            All feeds loaded ({totalCount})
+          </div>
+        )}
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="bg-cyber-highlight hover:bg-cyber-highlight/90">
+            <Button className="bg-cyber-highlight hover:bg-cyber-highlight/90 ml-auto">
               <Plus className="mr-1" /> Add New Feed
             </Button>
           </DialogTrigger>
@@ -192,6 +209,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ className }) => {
               limit={10}
               onConfigChange={(config) => handleFeedConfigChange(index, config)}
               onDelete={feed.isUserAdded ? () => handleDeleteFeed(index) : undefined}
+              onLoadingChange={(isLoading) => {
+                setFeedLoadingStates(prev => ({ ...prev, [index]: isLoading }));
+              }}
             />
           </div>
         ))}

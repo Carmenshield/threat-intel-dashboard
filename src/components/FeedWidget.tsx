@@ -17,8 +17,14 @@ export const FeedWidget: React.FC<FeedWidgetProps> = ({
   limit = 10,
   onConfigChange,
   onDelete,
+  onLoadingChange,
 }) => {
   const feed = useFeed(feedUrl, title, description);
+  
+  // Notify parent of loading state changes
+  useEffect(() => {
+    onLoadingChange?.(feed.loading);
+  }, [feed.loading, onLoadingChange]);
   
   // Add fetched items to search index
   useEffect(() => {
