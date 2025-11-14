@@ -104,7 +104,7 @@ export const fetchRssFeed = async (feedUrl: string): Promise<RssItem[]> => {
 };
 
 // React Query hook to fetch RSS feeds
-export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed & { refetch: () => void } => {
+export const useFeed = (feedUrl: string, title: string, description?: string): RssFeed => {
   // Validate feed URL before making request
   const urlValidation = validateFeedUrl(feedUrl);
   if (!urlValidation.isValid) {
