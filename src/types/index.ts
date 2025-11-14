@@ -31,6 +31,7 @@ export interface FeedWidgetProps {
   limit?: number;
   onConfigChange?: (config: { feedUrl: string; title: string; description?: string }) => void;
   onDelete?: () => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 export interface SearchResult {
