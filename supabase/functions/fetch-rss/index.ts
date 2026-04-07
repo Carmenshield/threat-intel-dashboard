@@ -1,4 +1,7 @@
-import { corsHeaders } from '@supabase/supabase-js/cors'
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,7 +18,6 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Validate URL
     let parsedUrl: URL
     try {
       parsedUrl = new URL(url)
